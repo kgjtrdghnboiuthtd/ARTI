@@ -73,7 +73,9 @@ Bashbun build --compile src/index.ts --outfile arcti
 ./arcti server
 
 ## Project Structure
-textsrc/
+
+```bash
+src/
 ├── index.ts                 # CLI entry point
 ├── config.ts                # Multi-provider configuration
 ├── core/                    # Types, RunManager, Sandbox, Memory, etc.

@@ -1,0 +1,52 @@
+# Arcti Configuration
+# Copy this file to arcti.yaml and adjust to your needs
+
+default_provider: ollama
+
+default_models:
+  tier1: "qwen2.5:3b"        # Low complexity — extraction, formatting
+  tier2: "gemma3:12b"         # Medium complexity — reasoning, synthesis
+  tier3: "llama3.1:70b"       # High complexity — planning, architecture
+
+providers:
+  ollama:
+    enabled: true
+    base_url: "http://localhost:11434"
+    mode: both                # local, cloud, or both
+  anthropic:
+    enabled: false
+    api_key_env: ANTHROPIC_API_KEY
+  openai:
+    enabled: false
+    api_key_env: OPENAI_API_KEY
+  grok:
+    enabled: false
+    api_key_env: XAI_API_KEY
+    base_url: "https://api.x.ai"
+  openrouter:
+    enabled: false
+    api_key_env: OPENROUTER_API_KEY
+    base_url: "https://openrouter.ai/api"
+  claude-code:
+    enabled: false
+
+bots:
+  telegram:
+    enabled: false
+    token: ""
+  whatsapp:
+    enabled: false
+    token: ""
+    phone_id: ""
+    verify_token: ""
+
+scheduler:
+  maxConcurrency: 8
+
+recursion:
+  maxDepth: 10
+  maxTotalTasks: 500
+
+server:
+  port: 3000
+  host: "localhost"

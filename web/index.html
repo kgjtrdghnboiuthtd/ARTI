@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcti</title>
+  <style>
+    :root {
+      --bg: #F5F5F3;
+      --surface: #FFFFFF;
+      --text: #1A1A1A;
+      --secondary: #8C8C8C;
+      --tertiary: #B5B5B5;
+      --border: #E5E5E3;
+      --accent: #E8613C;
+      --success: #2D8C5A;
+      --warning: #C4880D;
+      --error: #C43C3C;
+      --running: #2D6EC4;
+      --sidebar-w: 240px;
+      --selected-bg: #FEF6F3;
+    }
+
+    /* ─── Dark Mode ──────────────────────── */
+    [data-theme="dark"] {
+      --bg: #141414;
+      --surface: #1E1E1E;
+      --text: #E8E8E6;
+      --secondary: #8C8C8C;
+      --tertiary: #5A5A5A;
+      --border: #2E2E2E;
+      --accent: #E8613C;
+      --success: #3DA86A;
+      --warning: #D4980D;
+      --error: #D44C4C;
+      --running: #4D8ED4;
+      --selected-bg: #2A2018;
+    }
+    [data-theme="dark"] .detail-verification.passed { background: rgba(45,140,90,0.15); color: var(--success); }
+    [data-theme="dark"] .detail-verification.failed { background: rgba(196,60,60,0.15); color: var(--error); }
+    [data-theme="dark"] .qcm-field { background: var(--bg); color: var(--primary); border-color: var(--border); }
+    [data-theme="dark"] .qcm-btn-send:hover { background: var(--accent); }
+    [data-theme="dark"] .toggle-slider { background: var(--border); }
+    [data-theme="dark"] .shortcut-hint { border-color: var(--border); color: var(--secondary); }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Helvetica Neue', 'Inter', -apple-system, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+    }
+
+    /* ─── Sidebar ─────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      height: 100vh;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px 16px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .ws-badge {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--tertiary);
+    }
+
+    .ws-badge.connected { background: var(--success); }
+
+    .sidebar-section-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--tertiary);
+      padding: 12px 20px 6px;
+    }
+
+    .project-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 8px;
+    }
+
+    .project-tab {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+      margin-bottom: 2px;
+    }
+
+    .project-tab:hover { background: var(--bg); }
+    .project-tab.active { background: var(--bg); }
+
+    .project-tab-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .project-tab-dot.running { background: var(--running); animation: breathe 2s ease-in-out infinite; }
+    .project-tab-dot.completed { background: var(--success); }
+    .project-tab-dot.failed { background: var(--error); }
+    .project-tab-dot.aborted { background: var(--tertiary); }
+
+    .project-tab-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .project-tab-name {
+      font-size: 13px;
+      font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-tab-meta {
+      font-size: 10px;
+      color: var(--secondary);
+      margin-top: 2px;
+    }
+
+    .project-tab-close {
+      opacity: 0;
+      font-size: 14px;
+      color: var(--tertiary);
+      cursor: pointer;
+      padding: 2px;
+      line-height: 1;
+    }
+
+    .project-tab:hover .project-tab-close { opacity: 1; }
+    .project-tab-close:hover { color: var(--error); }
+
+    .sidebar-new-btn {
+      margin: 12px;
+      padding: 10px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sidebar-new-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Settings gear */
+    .settings-btn {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      color: var(--tertiary);
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-btn:hover { color: var(--text); }
+
+    .settings-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Settings panel */
+    .settings-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.15);
+      z-index: 100;
+    }
+
+    .settings-overlay.open { display: flex; align-items: center; justify-content: center; }
+
+    .settings-modal {
+      background: var(--surface);
+      border-radius: 16px;
+      width: 440px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    .settings-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .settings-group { margin-bottom: 18px; }
+
+    .settings-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--secondary);
+      margin-bottom: 6px;
+    }
+
+    .settings-select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .settings-select:focus { border-color: var(--accent); }
+
+    .settings-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+    }
+
+    .settings-input:focus { border-color: var(--accent); }
+    .settings-input::placeholder { color: var(--tertiary); }
+
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    .settings-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .settings-toggle-label svg { width: 18px; height: 18px; color: var(--secondary); }
+
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      cursor: pointer;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 22px;
+      transition: background 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    .settings-bot-config {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.2s;
+      opacity: 0;
+    }
+
+    .settings-bot-config.open {
+      max-height: 200px;
+      opacity: 1;
+    }
+
+    .settings-hint {
+      font-size: 10px;
+      color: var(--tertiary);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .settings-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
+    }
+
+    .settings-save-btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .settings-save-btn:hover { opacity: 0.85; }
+    .settings-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .settings-provider-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .settings-provider-card {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+
+    .settings-provider-card:hover { border-color: var(--accent); }
+    .settings-provider-card.active { border-color: var(--accent); background: var(--selected-bg); }
+    .settings-provider-card.enabled { border-color: #2d8c5a55; background: rgba(45,140,90,0.04); }
+    .settings-provider-card.disabled { opacity: 0.45; }
+    .settings-provider-card.active.enabled { border-color: var(--accent); background: var(--selected-bg); }
+
+    .settings-provider-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .settings-provider-name {
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .settings-provider-status {
+      font-size: 10px;
+      color: var(--secondary);
+    }
+    .settings-provider-status.ready { color: #2d8c5a; }
+    .settings-provider-status.ready::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2d8c5a; margin-right: 4px; vertical-align: middle; }
+    .settings-provider-status.missing { color: #c4783c; }
+    .settings-provider-status.missing::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #c4783c; margin-right: 4px; vertical-align: middle; }
+    .settings-provider-status.off { color: var(--tertiary); }
+
+    .provider-apikey-row {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .provider-apikey-row input {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: monospace;
+    }
+    .provider-apikey-row input:focus { outline: none; border-color: var(--accent); }
+    .provider-apikey-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .provider-apikey-btn:hover { opacity: 0.85; }
+
+    .settings-close {
+      float: right;
+      font-size: 18px;
+      color: var(--tertiary);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .settings-close:hover { color: var(--text); }
+
+    /* Provider selector in input bar */
+    .provider-select {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--secondary);
+      background: var(--surface);
+      outline: none;
+      cursor: pointer;
+      min-width: 100px;
+    }
+
+    .provider-select:focus { border-color: var(--accent); }
+
+    /* ─── Main ────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-width: 0;
+      padding: 24px 32px;
+      gap: 20px;
+    }
+
+    /* ─── Stats ───────────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .stat {
+      background: var(--surface);
+      padding: 16px 20px;
+    }
+
+    .stat:first-child { border-radius: 12px 0 0 12px; }
+    .stat:last-child { border-radius: 0 12px 12px 0; }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--secondary);
+      margin-top: 6px;
+    }
+
+    .stat-value.accent { color: var(--accent); }
+    .stat-value.success { color: var(--success); }
+    .stat-value.error { color: var(--error); }
+
+    /* ─── Content area ────────────────────── */
+    .content {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      min-height: 0;
+    }
+
+    /* ─── Task Panel ──────────────────────── */
+    .task-panel {
+      flex: 1;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .panel-label {
+      padding: 14px 20px 10px;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--secondary);
+      flex-shrink: 0;
+    }
+
+    .task-list {
+      padding: 0 8px 8px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .task-list-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--tertiary);
+      font-size: 14px;
+    }
+
+    .no-project-msg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: var(--tertiary);
+      font-size: 14px;
+    }
+
+    #project-view {
+      flex: 1;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 0;
+      display: none;
+    }
+
+    #project-view.visible {
+      display: flex !important;
+    }
+
+    /* ─── Depth groups (parallel lanes) ──── */
+    .depth-group { margin-bottom: 2px; }
+
+    .depth-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--tertiary);
+      padding: 6px 12px 3px;
+    }
+
+    .depth-lanes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      padding: 0 4px;
+    }
+
+    /* ─── Task card ───────────────────────── */
+    .task-card {
+      flex: 1 1 calc(50% - 3px);
+      min-width: 160px;
+      max-width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border: 2px solid transparent;
+    }
+
+    .task-card:hover { background: var(--bg); }
+    .task-card.selected { border-color: var(--accent); background: var(--selected-bg); }
+    .depth-lanes .task-card:only-child { flex: 1 1 100%; }
+
+    .task-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--tertiary);
+    }
+
+    .task-dot.pending { background: var(--tertiary); }
+    .task-dot.running { background: var(--running); animation: breathe 2s ease-in-out infinite; }
+    .task-dot.verified { background: var(--success); }
+    .task-dot.failed { background: var(--error); }
+    .task-dot.completed { background: var(--success); }
+
+    @keyframes breathe {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .task-name {
+      flex: 1;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-tier {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--secondary);
+      padding: 2px 5px;
+      border-radius: 3px;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .task-tier.high { color: var(--accent); }
+
+    /* ─── Detail Panel ────────────────────── */
+    .detail-panel {
+      width: 300px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .detail-panel.empty { opacity: 0.4; }
+
+    .detail-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .detail-title {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--secondary);
+    }
+
+    .detail-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .detail-meta-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .detail-body {
+      padding: 14px 16px;
+      overflow-y: auto;
+      flex: 1;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .detail-section { margin-bottom: 14px; }
+
+    .detail-section-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--secondary);
+      margin-bottom: 4px;
+    }
+
+    .detail-output {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 11px;
+      line-height: 1.6;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .detail-criteria { list-style: none; padding: 0; }
+    .detail-criteria li { padding: 3px 0; font-size: 11px; color: var(--secondary); }
+    .detail-criteria li::before { content: "- "; color: var(--tertiary); }
+
+    .detail-verification {
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    .detail-verification.passed { background: #EDF7F0; color: var(--success); }
+    .detail-verification.failed { background: #FDEEEE; color: var(--error); }
+
+    .detail-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--tertiary);
+      font-size: 12px;
+    }
+
+    /* ─── Activity strip ──────────────────── */
+    .activity-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 24px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .activity-strip .label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--tertiary);
+      flex-shrink: 0;
+    }
+
+    .activity-messages {
+      flex: 1;
+      overflow: hidden;
+      font-size: 11px;
+      color: var(--secondary);
+      white-space: nowrap;
+    }
+
+    .activity-msg .event-type { color: var(--accent); font-weight: 500; }
+
+    /* ─── Input ───────────────────────────── */
+    .input-bar {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .input-bar input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-bar input::placeholder { color: var(--tertiary); }
+    .input-bar input:focus { border-color: var(--accent); }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.8; }
+    .btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .btn-run { background: var(--text); color: var(--surface); }
+    .btn-stop { background: var(--error); color: white; display: none; }
+    .btn-stop.visible { display: block; }
+    .btn-run { display: block; }
+
+    /* ─── WorkDir input ─────────────────── */
+    .workdir-row {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+      margin-bottom: 4px;
+    }
+
+    .workdir-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .workdir-input::placeholder { color: var(--tertiary); }
+    .workdir-input:focus { border-color: var(--accent); }
+
+    .workdir-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--tertiary);
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+
+    .workdir-label svg {
+      width: 12px;
+      height: 12px;
+      fill: var(--tertiary);
+    }
+
+    /* ─── Artifacts ─────────────────────── */
+    .artifacts-bar {
+      display: none;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 0;
+      flex-shrink: 0;
+    }
+
+    .artifacts-bar.visible { display: flex; }
+
+    .artifacts-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--tertiary);
+      flex-shrink: 0;
+    }
+
+    .artifact-chip {
+      font-size: 11px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      color: var(--text);
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .artifact-dir {
+      font-size: 11px;
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: opacity 0.15s;
+    }
+    .artifact-dir:hover {
+      opacity: 0.7;
+    }
+
+    /* ─── Result ──────────────────────────── */
+    .result-box {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 0 8px 8px;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      max-height: 160px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .result-box.visible { display: block; }
+
+    /* ─── QCM Modal ──────────────────────── */
+    .qcm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .qcm-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .qcm-modal {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 520px;
+      width: 90%;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.12);
+    }
+
+    .qcm-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .qcm-subtitle {
+      font-size: 12px;
+      color: var(--secondary);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .qcm-question {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .qcm-question-label {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .qcm-number {
+      color: var(--accent);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .qcm-field {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .qcm-field:focus {
+      border-color: var(--accent);
+    }
+
+    .qcm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .qcm-btn {
+      padding: 8px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+
+    .qcm-btn-skip {
+      background: var(--bg);
+      color: var(--secondary);
+    }
+
+    .qcm-btn-skip:hover { background: var(--border); }
+
+    .qcm-btn-send {
+      background: var(--text);
+      color: white;
+    }
+
+    .qcm-btn-send:hover { background: #333; }
+
+    /* ─── Stream indicator ────────────────── */
+    .stream-output {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      color: var(--text);
+      opacity: 0.85;
+    }
+
+    .stream-cursor {
+      display: inline-block;
+      width: 6px;
+      height: 14px;
+      background: var(--accent);
+      animation: blink 0.8s infinite;
+      vertical-align: text-bottom;
+      margin-left: 2px;
+    }
+
+    @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+    /* ─── Diff view ──────────────────────── */
+    .diff-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 8px;
+    }
+
+    .diff-tab {
+      padding: 4px 12px;
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--secondary);
+    }
+
+    .diff-tab:first-child { border-radius: 6px 0 0 6px; }
+    .diff-tab:last-child { border-radius: 0 6px 6px 0; }
+    .diff-tab.active { background: var(--surface); color: var(--text); font-weight: 500; }
+
+    .diff-line-add { background: rgba(45,140,90,0.1); }
+    .diff-line-del { background: rgba(196,60,60,0.1); text-decoration: line-through; opacity: 0.6; }
+
+    /* ─── Cost estimate ──────────────────── */
+    .cost-bar {
+      display: none;
+      gap: 16px;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 11px;
+      color: var(--secondary);
+      flex-shrink: 0;
+    }
+
+    .cost-bar.visible { display: flex; }
+    .cost-value { color: var(--accent); font-weight: 600; }
+
+    /* ─── Preview iframe ────────────────── */
+    .preview-panel {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .preview-panel.visible { display: block; }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--tertiary);
+    }
+
+    .preview-header button {
+      background: none;
+      border: none;
+      color: var(--secondary);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .preview-iframe {
+      width: 100%;
+      height: 300px;
+      border: none;
+    }
+
+    /* ─── Feedback bar on tasks ──────────── */
+    .task-feedback-bar {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .task-row:hover .task-feedback-bar { opacity: 1; }
+
+    .task-fb-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--secondary);
+      transition: all 0.15s;
+    }
+
+    .task-fb-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .task-fb-btn.redo:hover { border-color: var(--warning); color: var(--warning); }
+    .task-fb-btn.reject:hover { border-color: var(--error); color: var(--error); }
+
+    /* ─── Keyboard shortcut hints ────────── */
+    .shortcut-hint {
+      font-size: 9px;
+      color: var(--tertiary);
+      letter-spacing: 0.5px;
+      padding: 2px 5px;
+      background: var(--bg);
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      font-family: 'SF Mono', monospace;
+    }
+
+    /* ─── Theme toggle ───────────────────── */
+    .theme-toggle {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      fill: var(--tertiary);
+      transition: fill 0.2s;
+    }
+
+    .theme-toggle:hover { fill: var(--text); }
+
+    /* ─── Toast notifications ────────────── */
+    .toast-container {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      animation: slideIn 0.3s ease-out;
+      max-width: 320px;
+    }
+
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error { border-left: 3px solid var(--error); }
+    .toast.info { border-left: 3px solid var(--running); }
+
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    /* ─── Export/Import buttons ───────────── */
+    .project-actions {
+      display: flex;
+      gap: 4px;
+      padding: 4px 12px;
+    }
+
+    .action-btn {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--tertiary);
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: none;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    /* ─── Scrollbar ───────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--tertiary); }
+  </style>
+</head>
+<body>
+  <!-- Toast notifications -->
+  <div class="toast-container" id="toast-container"></div>
+  <!-- Settings modal -->
+  <div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this)toggleSettings()">
+    <div class="settings-modal">
+      <span class="settings-close" onclick="toggleSettings()">&times;</span>
+      <div class="settings-title">Settings</div>
+
+      <div class="settings-group">
+        <div class="settings-label">Default Provider</div>
+        <div class="settings-provider-grid" id="settings-providers"></div>
+      </div>
+
+      <div class="settings-group" id="ollama-mode-group" style="display:none">
+        <div class="settings-label">Ollama Mode</div>
+        <select class="settings-select" id="settings-ollama-mode" onchange="updateOllamaMode(this.value)">
+          <option value="both">Both (local + cloud)</option>
+          <option value="local">Local only</option>
+          <option value="cloud">Cloud only</option>
+        </select>
+      </div>
+
+      <div class="settings-group" id="provider-models-group" style="display:none">
+        <div class="settings-label" id="provider-models-label">Models</div>
+        <div style="font-size:11px;color:var(--secondary);margin-bottom:6px" id="provider-models-hint">Loading models from API...</div>
+        <input class="settings-input" id="provider-models-filter" type="text" placeholder="Filter models..." oninput="filterProviderModels()" style="margin-bottom:6px;font-size:11px;padding:6px 8px;">
+        <div id="provider-models-list" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;font-size:11px;"></div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">Tier 1 Model (simple tasks)</div>
+        <select class="settings-select" id="settings-tier1"></select>
+      </div>
+      <div class="settings-group">
+        <div class="settings-label">Tier 2 Model (medium tasks)</div>
+        <select class="settings-select" id="settings-tier2"></select>
+      </div>
+      <div class="settings-group">
+        <div class="settings-label">Tier 3 Model (complex tasks)</div>
+        <select class="settings-select" id="settings-tier3"></select>
+      </div>
+
+      <hr class="settings-divider">
+      <div class="settings-label" style="margin-bottom:12px;">Intégrations Bots</div>
+
+      <!-- Telegram -->
+      <div class="settings-group">
+        <div class="settings-toggle">
+          <div class="settings-toggle-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 5L2 12.5l7 1M21 5l-4 15-7-8.5M21 5L9 13.5"/><path d="M9 13.5V19l3.2-3.5"/></svg>
+            Telegram
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bot-telegram-enabled" onchange="toggleBotConfig('telegram')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-bot-config" id="bot-telegram-config">
+          <input class="settings-input" id="bot-telegram-token" type="password" placeholder="Bot Token (depuis @BotFather)">
+          <div class="settings-hint">Crée un bot via <b>@BotFather</b> sur Telegram, copie le token ici.</div>
+        </div>
+      </div>
+
+      <!-- WhatsApp -->
+      <div class="settings-group">
+        <div class="settings-toggle">
+          <div class="settings-toggle-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Zm5 0a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z"/></svg>
+            WhatsApp
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="bot-whatsapp-enabled" onchange="toggleBotConfig('whatsapp')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-bot-config" id="bot-whatsapp-config">
+          <input class="settings-input" id="bot-whatsapp-token" type="password" placeholder="Access Token (Meta Business)" style="margin-bottom:6px;">
+          <input class="settings-input" id="bot-whatsapp-phone" type="text" placeholder="Phone Number ID" style="margin-bottom:6px;">
+          <input class="settings-input" id="bot-whatsapp-verify" type="text" placeholder="Verify Token (webhook)">
+          <div class="settings-hint">Nécessite un compte <b>Meta Business</b> et l'API WhatsApp Cloud.</div>
+        </div>
+      </div>
+
+      <button class="settings-save-btn" id="bot-save-btn" onclick="saveBotSettings()">Sauvegarder les bots</button>
+    </div>
+  </div>
+
+  <!-- Skills panel -->
+  <div class="settings-overlay" id="skills-overlay" onclick="if(event.target===this)toggleSkillsPanel()">
+    <div class="settings-modal" style="max-width:640px;">
+      <span class="settings-close" onclick="toggleSkillsPanel()">&times;</span>
+      <div class="settings-title">Skill Library</div>
+      <div id="skills-stats" style="display:flex;gap:16px;margin-bottom:16px;">
+        <div class="stat"><div class="stat-value accent" id="sk-total">0</div><div class="stat-label">Total</div></div>
+        <div class="stat"><div class="stat-value success" id="sk-active">0</div><div class="stat-label">Active</div></div>
+        <div class="stat"><div class="stat-value error" id="sk-deprecated">0</div><div class="stat-label">Deprecated</div></div>
+        <div class="stat"><div class="stat-value" id="sk-avg">0</div><div class="stat-label">Avg Score</div></div>
+      </div>
+      <div id="skills-list" style="max-height:400px;overflow-y:auto;"></div>
+      <div style="margin-top:12px;">
+        <label style="font-size:11px;color:var(--secondary);display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="sk-show-deprecated" onchange="loadSkills()"> Show deprecated
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- QCM intake modal -->
+  <div class="qcm-overlay" id="qcm-overlay">
+    <div class="qcm-modal">
+      <div class="qcm-title">Clarification</div>
+      <div class="qcm-subtitle">Arcti a besoin de quelques précisions. Répondez à ce que vous pouvez.</div>
+      <div id="qcm-questions"></div>
+      <div class="qcm-actions">
+        <button class="qcm-btn qcm-btn-skip" onclick="submitQCM(true)">Passer</button>
+        <button class="qcm-btn qcm-btn-send" onclick="submitQCM(false)">Envoyer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar: Project tabs -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="logo">Arcti</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="ws-badge" id="ws-dot"></div>
+        <svg class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+        <div class="settings-btn" onclick="toggleSettings()">
+          <svg viewBox="0 0 20 20"><path d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.29.95c-1.35-.82-2.9.73-2.08 2.08.46.76.1 1.74-.95 2.29-1.56.38-1.56 2.6 0 2.98a1.53 1.53 0 01.95 2.29c-.82 1.35.73 2.9 2.08 2.08a1.53 1.53 0 012.29.95c.38 1.56 2.6 1.56 2.98 0a1.53 1.53 0 012.29-.95c1.35.82 2.9-.73 2.08-2.08a1.53 1.53 0 01.95-2.29c1.56-.38 1.56-2.6 0-2.98a1.53 1.53 0 01-.95-2.29c.82-1.35-.73-2.9-2.08-2.08a1.53 1.53 0 01-2.29-.95zM10 13a3 3 0 100-6 3 3 0 000 6z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">Projects</div>
+    <div class="project-list" id="project-list"></div>
+
+    <div class="sidebar-new-btn" id="new-project-btn" onclick="focusInput()">+ New project</div>
+
+    <div class="sidebar-section-label" style="margin-top:auto;">Skills</div>
+    <div class="sidebar-new-btn" onclick="toggleSkillsPanel()" id="skills-btn" style="margin-bottom:12px;">
+      <span id="skills-count">0</span> skills — <span id="skills-avg">0</span>/100 avg
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main" id="main-content">
+    <!-- No project state -->
+    <div class="no-project-msg" id="no-project">Enter a task below to create your first project</div>
+
+    <!-- Project view (hidden until a project is selected) -->
+    <div id="project-view">
+      <!-- Cost estimate + Export -->
+      <div class="cost-bar" id="cost-bar">
+        <span>Estimate:</span>
+        <span><span class="cost-value" id="cost-tokens">—</span> tokens</span>
+        <span><span class="cost-value" id="cost-usd">—</span> USD</span>
+        <span><span class="cost-value" id="cost-time">—</span> min</span>
+        <div style="margin-left:auto;display:flex;gap:4px;">
+          <button class="action-btn" onclick="exportProject()">Export</button>
+          <button class="action-btn" onclick="document.getElementById('import-file').click()">Import</button>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importProject(event)">
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value accent" id="stat-tasks">0</div>
+          <div class="stat-label">Tasks</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value success" id="stat-verified">0</div>
+          <div class="stat-label">Verified</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-running" style="color:var(--running)">0</div>
+          <div class="stat-label">Running</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value error" id="stat-failed">0</div>
+          <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-tokens">0</div>
+          <div class="stat-label">Tokens</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-calls">0</div>
+          <div class="stat-label">Calls</div>
+        </div>
+      </div>
+
+      <!-- Content: Tasks + Detail -->
+      <div class="content">
+        <div class="task-panel">
+          <div class="panel-label">Tasks</div>
+          <div class="task-list" id="task-tree">
+            <div class="task-list-empty">Processing...</div>
+          </div>
+          <div id="result-container" class="result-box"></div>
+        </div>
+
+        <div class="detail-panel empty" id="detail-panel">
+          <div class="detail-header">
+            <div class="detail-title" id="detail-title">No task selected</div>
+            <div class="detail-meta" id="detail-meta"></div>
+          </div>
+          <div class="detail-body" id="detail-body">
+            <div class="detail-empty">Click a task to inspect</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div class="preview-panel" id="preview-panel">
+        <div class="preview-header">
+          <span>Live Preview</span>
+          <button onclick="togglePreview()">×</button>
+        </div>
+        <iframe class="preview-iframe" id="preview-iframe" sandbox="allow-scripts"></iframe>
+      </div>
+
+      <!-- Activity -->
+      <div class="activity-strip">
+        <span class="label">Activity</span>
+        <div class="activity-messages" id="activity-feed"></div>
+      </div>
+    </div>
+
+    <!-- Artifacts bar (visible when project has artifacts) -->
+    <div class="artifacts-bar" id="artifacts-bar">
+      <span class="artifacts-label">Output</span>
+      <span class="artifact-dir" id="artifact-dir" onclick="openWorkDir()"></span>
+      <span id="artifact-chips"></span>
+    </div>
+
+    <!-- Input bar (always visible) -->
+    <div class="workdir-row">
+      <span class="workdir-label">
+        <svg viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+        Folder
+      </span>
+      <input type="text" class="workdir-input" id="workdir-input" placeholder="~/Projects/my-project (optional — output folder)" />
+    </div>
+    <div class="input-bar">
+      <select class="provider-select" id="provider-select"></select>
+      <input type="text" id="task-input" placeholder="What would you like to build?" autofocus />
+      <button class="btn btn-run" id="run-btn" onclick="startRun()">Run</button>
+      <button class="btn btn-stop" id="stop-btn" onclick="stopRun()">Stop</button>
+    </div>
+  </div>
+
+  <script>
+    // ─── State ──────────────────────────────
+    const projects = new Map(); // id → { id, name, status, tasks, totalTokens, totalCalls, selectedTaskId }
+    let activeProjectId = null;
+    let ws = null;
+
+    // ─── Helpers ─────────────────────────────
+    function getProject(id) {
+      if (!id) return null;
+      return projects.get(id) || null;
+    }
+
+    function activeProject() {
+      return getProject(activeProjectId);
+    }
+
+    // ─── WebSocket ──────────────────────────
+    function connect() {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}`);
+
+      ws.onopen = () => {
+        document.getElementById('ws-dot').className = 'ws-badge connected';
+      };
+
+      ws.onclose = () => {
+        document.getElementById('ws-dot').className = 'ws-badge';
+        setTimeout(connect, 2000);
+      };
+
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        handleEvent(msg.event, msg.data);
+      };
+    }
+
+    // ─── Event Handlers ─────────────────────
+    function handleEvent(event, data) {
+      const pid = data?.projectId;
+      if (!pid) return;
+
+      // Auto-create project entry when we receive events for unknown projects (e.g. from Telegram/WhatsApp)
+      if (event === 'project:created') {
+        if (!projects.has(pid)) {
+          const source = data.source || 'dashboard';
+          const badge = source !== 'dashboard' ? ` [${source}]` : '';
+          projects.set(pid, {
+            id: pid,
+            name: (data.name || 'Projet') + badge,
+            status: 'running',
+            provider: data.provider || 'ollama',
+            workDir: data.workDir || null,
+            artifacts: [],
+            tasks: new Map(),
+            totalTokens: 0,
+            totalCalls: 0,
+            selectedTaskId: null,
+            brief: '',
+            source,
+          });
+          renderSidebar();
+          if (!activeProjectId) {
+            activeProjectId = pid;
+            renderProject();
+          }
+          showToast(`Nouveau projet${badge} : ${data.name || pid}`, 'info');
+        }
+        return;
+      }
+
+      let proj = projects.get(pid);
+      // If we still don't know this project, fetch it from the server
+      if (!proj) {
+        fetch(`/projects/${pid}/status`).then(r => r.json()).then(d => {
+          if (d.id) {
+            const source = d.source || 'external';
+            projects.set(pid, {
+              id: pid, name: d.name || pid, status: d.status || 'running',
+              provider: d.provider || 'ollama', workDir: d.workDir || null,
+              artifacts: d.artifacts || [], tasks: new Map(),
+              totalTokens: 0, totalCalls: 0, selectedTaskId: null,
+              brief: d.brief?.objective || '', source,
+            });
+            renderSidebar();
+          }
+        }).catch(() => {});
+        return;
+      }
+
+      // Activity (only for active project)
+      if (pid === activeProjectId) {
+        addActivity(event, data, proj);
+      }
+
+      switch (event) {
+        case 'task:started':
+          updateTask(proj, data.taskId, { status: 'running', modelUsed: data.model });
+          break;
+
+        case 'task:completed': {
+          updateTask(proj, data.taskId, {
+            status: 'verified', modelUsed: data.modelUsed,
+            output: data.output || '', tokenUsage: data.tokenUsage,
+            durationMs: data.durationMs, verification: data.verification,
+            attempts: data.attempts,
+          });
+          const tok = (data.tokenUsage?.promptTokens || 0) + (data.tokenUsage?.completionTokens || 0);
+          proj.totalTokens += tok;
+          break;
+        }
+
+        case 'task:failed':
+          updateTask(proj, data.taskId, {
+            status: 'failed', modelUsed: data.modelUsed,
+            output: data.output || '', attempts: data.attempts,
+          });
+          break;
+
+        case 'task:decomposed':
+          if (data.children) {
+            for (const child of data.children) {
+              proj.tasks.set(child.id, { ...child, status: 'pending', modelUsed: '', output: '' });
+            }
+          }
+          updateTask(proj, data.parentId, {
+            status: 'verified',
+            output: `Decomposed into ${data.children?.length || 0} sub-tasks`,
+          });
+          break;
+
+        case 'project:intake-questions':
+          showQCM(pid, data.questions || []);
+          break;
+
+        case 'project:intake-done':
+          proj.brief = data.objective || '';
+          break;
+
+        case 'project:complete':
+          proj.status = 'completed';
+          showToast(`Project "${proj.name}" completed`, 'success');
+          // Fetch artifacts list
+          if (proj.workDir) {
+            fetch(`/projects/${pid}/status`).then(r => r.json()).then(d => {
+              proj.artifacts = d.artifacts || [];
+              if (pid === activeProjectId) updateArtifacts();
+            }).catch(() => {});
+          }
+          break;
+
+        case 'project:aborted':
+          proj.status = 'aborted';
+          break;
+
+        case 'llm:response': {
+          proj.totalCalls++;
+          const tok = (data.tokenUsage?.promptTokens || 0) + (data.tokenUsage?.completionTokens || 0);
+          proj.totalTokens += tok;
+          break;
+        }
+
+        case 'task:stream-chunk':
+          if (pid === activeProjectId) handleStreamChunk(data);
+          break;
+
+        case 'task:feedback-request':
+          showToast(`Task "${data.taskId?.slice(0,8)}" needs feedback`, 'info');
+          break;
+      }
+
+      if (pid === activeProjectId) {
+        renderTasks();
+        updateStats();
+        // Refresh detail if selected task was affected
+        if (proj.selectedTaskId && (data.taskId === proj.selectedTaskId || data.parentId === proj.selectedTaskId)) {
+          showDetail(proj.selectedTaskId);
+        }
+      }
+
+      renderProjectList();
+    }
+
+    function updateTask(proj, taskId, updates) {
+      const t = proj.tasks.get(taskId);
+      if (t) Object.assign(t, updates);
+    }
+
+    // ─── Project Management ─────────────────
+    function createProject(id, name, input) {
+      const proj = {
+        id, name, input,
+        status: 'running',
+        tasks: new Map(),
+        totalTokens: 0,
+        totalCalls: 0,
+        brief: '',
+        selectedTaskId: null,
+        workDir: null,
+        artifacts: [],
+      };
+      projects.set(id, proj);
+      selectProject(id);
+      renderProjectList();
+      return proj;
+    }
+
+    function selectProject(id) {
+      activeProjectId = id;
+      const proj = activeProject();
+
+      document.getElementById('no-project').style.display = proj ? 'none' : 'flex';
+      const pv = document.getElementById('project-view');
+      if (proj) pv.classList.add('visible'); else pv.classList.remove('visible');
+
+      if (proj) {
+        renderTasks();
+        updateStats();
+        updateStopButton();
+        updateArtifacts();
+        loadCostEstimate();
+        updatePreview();
+
+        // Reset detail panel
+        document.getElementById('detail-panel').classList.add('empty');
+        document.getElementById('detail-title').textContent = 'No task selected';
+        document.getElementById('detail-meta').innerHTML = '';
+        document.getElementById('detail-body').innerHTML = '<div class="detail-empty">Click a task to inspect</div>';
+
+        if (proj.selectedTaskId) showDetail(proj.selectedTaskId);
+      } else {
+        hideCostBar();
+        document.getElementById('preview-panel').classList.remove('visible');
+      }
+
+      renderProjectList();
+    }
+
+    function deleteProject(id, evt) {
+      if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+      const proj = projects.get(id);
+      if (proj && proj.status === 'running') {
+        fetch(`/projects/${id}/stop`, { method: 'POST' }).catch(() => {});
+      }
+      fetch(`/projects/${id}`, { method: 'DELETE' }).catch(() => {});
+      projects.delete(id);
+
+      if (activeProjectId === id) {
+        const remaining = [...projects.keys()];
+        selectProject(remaining[0] || null);
+      }
+      renderProjectList();
+    }
+
+    // ─── Render Project List ────────────────
+    function renderProjectList() {
+      const container = document.getElementById('project-list');
+      const sorted = [...projects.values()].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      if (sorted.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = sorted.map(proj => {
+        const active = proj.id === activeProjectId ? ' active' : '';
+        const taskCount = proj.tasks.size;
+        const verified = [...proj.tasks.values()].filter(t => t.status === 'verified').length;
+        const provLabel = proj.provider || '';
+
+        return `<div class="project-tab${active}" onclick="selectProject('${esc(proj.id)}')">
+          <div class="project-tab-dot ${esc(proj.status)}"></div>
+          <div class="project-tab-info">
+            <div class="project-tab-name">${esc(proj.name)}</div>
+            <div class="project-tab-meta">${verified}/${taskCount} tasks${provLabel ? ' · ' + esc(provLabel) : ''}</div>
+          </div>
+          <span class="project-tab-close" onclick="deleteProject('${esc(proj.id)}', event)">&times;</span>
+        </div>`;
+      }).join('');
+    }
+
+    // ─── Render Tasks ───────────────────────
+    function renderTasks() {
+      const proj = activeProject();
+      const container = document.getElementById('task-tree');
+      if (!proj) return;
+
+      const all = [...proj.tasks.values()];
+      if (all.length === 0) {
+        container.innerHTML = '<div class="task-list-empty">Processing...</div>';
+        return;
+      }
+
+      // Build parent→children map using parentTaskId
+      const children = new Map();
+      const roots = [];
+      for (const t of all) {
+        const pid = t.parentTaskId;
+        if (pid && proj.tasks.has(pid)) {
+          if (!children.has(pid)) children.set(pid, []);
+          children.get(pid).push(t);
+        } else {
+          roots.push(t);
+        }
+      }
+
+      container.innerHTML = renderTaskTree(roots, children, 0, proj) || '<div class="task-list-empty">Processing...</div>';
+
+      container.querySelectorAll('.task-card').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.dataset.taskId;
+          if (proj) proj.selectedTaskId = id;
+          renderTasks();
+          showDetail(id);
+        });
+      });
+    }
+
+    function renderTaskTree(tasks, childrenMap, depth, proj) {
+      if (!tasks || tasks.length === 0) return '';
+
+      let html = '<div class="depth-group">';
+      if (tasks.length > 1 && depth > 0) {
+        html += `<div class="depth-label" style="padding-left:${depth * 16}px">${tasks.length} parallel</div>`;
+      }
+
+      html += `<div class="depth-lanes" style="padding-left:${depth * 16}px">`;
+      for (const task of tasks) {
+        const status = task.status || 'pending';
+        const sel = task.id === proj.selectedTaskId ? ' selected' : '';
+        const canRedo = status === 'verified' || status === 'failed';
+        const fbHtml = canRedo ? `<div class="task-feedback-bar">
+          <button class="task-fb-btn redo" title="Retry" onclick="event.stopPropagation();sendTaskFeedback('${task.id}','redo')">↻</button>
+        </div>` : '';
+        html += `<div class="task-card task-row${sel}" data-task-id="${esc(task.id)}" data-id="${esc(task.id)}">
+          <div class="task-dot ${status}"></div>
+          <span class="task-name">${esc(task.name)}</span>
+          <span class="task-tier ${task.complexity}">${esc(task.complexity || 'low')}</span>
+          ${fbHtml}
+        </div>`;
+      }
+      html += '</div>';
+
+      // Render children for each task that has sub-tasks
+      for (const task of tasks) {
+        const subs = childrenMap.get(task.id);
+        if (subs && subs.length > 0) {
+          html += renderTaskTree(subs, childrenMap, depth + 1, proj);
+        }
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    function updateStats() {
+      const proj = activeProject();
+      if (!proj) return;
+
+      const all = [...proj.tasks.values()];
+      document.getElementById('stat-tasks').textContent = all.length;
+      document.getElementById('stat-verified').textContent = all.filter(t => t.status === 'verified').length;
+      document.getElementById('stat-running').textContent = all.filter(t => t.status === 'running').length;
+      document.getElementById('stat-failed').textContent = all.filter(t => t.status === 'failed').length;
+      document.getElementById('stat-tokens').textContent = proj.totalTokens.toLocaleString();
+      document.getElementById('stat-calls').textContent = proj.totalCalls;
+    }
+
+    function updateStopButton() {
+      const proj = activeProject();
+      const running = proj && proj.status === 'running';
+      document.getElementById('stop-btn').className = running ? 'btn btn-stop visible' : 'btn btn-stop';
+    }
+
+    // ─── Task Detail ────────────────────────
+    async function showDetail(taskId) {
+      const proj = activeProject();
+      if (!proj) return;
+
+      const panel = document.getElementById('detail-panel');
+      const task = proj.tasks.get(taskId);
+      if (!task) { panel.classList.add('empty'); return; }
+
+      panel.classList.remove('empty');
+
+      // Fetch fresh data
+      let result = null;
+      try {
+        const res = await fetch(`/projects/${proj.id}/tasks/${taskId}`);
+        if (res.ok) {
+          const data = await res.json();
+          result = data.result;
+        }
+      } catch {}
+
+      const output = result?.output || task.output || '';
+      const status = result?.status || task.status || 'pending';
+      const model = result?.modelUsed || task.modelUsed || '';
+      const attempts = result?.attempts || task.attempts || 0;
+      const tokens = result?.tokenUsage;
+      const totalTok = tokens ? (tokens.promptTokens + tokens.completionTokens) : 0;
+      const duration = result?.durationMs || task.durationMs || 0;
+      const verification = result?.verification || task.verification;
+
+      const colors = { pending:'var(--tertiary)', running:'var(--running)', verified:'var(--success)', failed:'var(--error)', completed:'var(--success)' };
+
+      document.getElementById('detail-title').textContent = task.name;
+      document.getElementById('detail-meta').innerHTML = `
+        <span class="detail-meta-item"><span class="detail-meta-dot" style="background:${colors[status]||'var(--tertiary)'}"></span>${esc(status)}</span>
+        ${model ? `<span class="detail-meta-item">${esc(model)}</span>` : ''}
+        ${attempts ? `<span class="detail-meta-item">${attempts} att.</span>` : ''}
+        ${totalTok ? `<span class="detail-meta-item">${totalTok.toLocaleString()} tok</span>` : ''}
+        ${duration ? `<span class="detail-meta-item">${(duration/1000).toFixed(1)}s</span>` : ''}`;
+
+      let body = '';
+      if (task.description) {
+        body += `<div class="detail-section"><div class="detail-section-label">Description</div><div style="font-size:11px;color:var(--secondary);line-height:1.5">${esc(task.description)}</div></div>`;
+      }
+      if (output) {
+        body += `<div class="detail-section"><div class="detail-section-label">Output</div><div class="detail-output">${esc(output)}</div></div>`;
+      } else if (status === 'running') {
+        body += `<div class="detail-section"><div class="detail-section-label">Output</div><div class="detail-output" style="color:var(--secondary);font-style:italic">Generating...</div></div>`;
+      }
+      if (verification) {
+        const cls = verification.passed ? 'passed' : 'failed';
+        body += `<div class="detail-section"><div class="detail-section-label">Verification</div><div class="detail-verification ${cls}">${verification.passed ? 'Passed' : 'Failed'}${verification.feedback ? ' — ' + esc(verification.feedback) : ''}${verification.issues?.length ? '<br>' + verification.issues.map(i=>esc(i)).join('<br>') : ''}</div></div>`;
+      }
+      if (task.acceptanceCriteria?.length) {
+        body += `<div class="detail-section"><div class="detail-section-label">Criteria</div><ul class="detail-criteria">${task.acceptanceCriteria.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`;
+      }
+      if (task.dependsOn?.length) {
+        const names = task.dependsOn.map(d => { const dep = proj.tasks.get(d); return dep ? dep.name : d.slice(0,8); });
+        body += `<div class="detail-section"><div class="detail-section-label">Depends on</div><div style="font-size:11px;color:var(--secondary)">${names.map(n=>esc(n)).join(', ')}</div></div>`;
+      }
+
+      document.getElementById('detail-body').innerHTML = body || '<div class="detail-empty">No data yet</div>';
+    }
+
+    // ─── Activity ───────────────────────────
+    function addActivity(event, data, proj) {
+      const feed = document.getElementById('activity-feed');
+      const detail = summarizeEvent(event, data, proj);
+      feed.innerHTML = `<span class="activity-msg"><span class="event-type">${esc(event)}</span> ${esc(detail)}</span>`;
+    }
+
+    function summarizeEvent(event, data, proj) {
+      const taskName = (id) => { const t = proj?.tasks.get(id); return t ? t.name : (id||'').slice(0,8); };
+      switch (event) {
+        case 'task:started': return `${taskName(data.taskId)} → ${data.model}`;
+        case 'task:completed': return `${taskName(data.taskId)} verified`;
+        case 'task:failed': return `${taskName(data.taskId)} failed`;
+        case 'task:decomposed': return `${data.children?.length||0} sub-tasks`;
+        case 'project:intake-questions': return `${data.questions?.length||0} clarification questions`;
+        case 'project:intake-done': return data.objective || '';
+        case 'project:complete': return 'All tasks complete';
+        case 'project:aborted': return 'Stopped';
+        case 'llm:response': return `${data.model} (${(data.tokenUsage?.promptTokens||0)+(data.tokenUsage?.completionTokens||0)} tok)`;
+        case 'task:stream-chunk': return '';
+        case 'task:feedback-request': return `Feedback needed: ${data.taskId?.slice(0,8)}`;
+        default: return '';
+      }
+    }
+
+    // ─── Settings ────────────────────────────
+    let providersData = [];
+    let currentSettings = {};
+
+    function toggleSettings() {
+      const overlay = document.getElementById('settings-overlay');
+      overlay.classList.toggle('open');
+      if (overlay.classList.contains('open')) { loadSettings(); loadBotSettings(); }
+    }
+
+    async function loadSettings() {
+      try {
+        const [settingsRes, providersRes] = await Promise.all([
+          fetch('/settings'), fetch('/providers')
+        ]);
+        currentSettings = await settingsRes.json();
+        providersData = await providersRes.json();
+        renderSettings();
+      } catch {}
+    }
+
+    function renderSettings() {
+      const grid = document.getElementById('settings-providers');
+      grid.innerHTML = providersData.map(p => {
+        const active = p.name === currentSettings.defaultProvider ? ' active' : '';
+        const isEnabled = p.enabled;
+        const isReady = isEnabled && p.available && (p.hasApiKey || !p.needsApiKey);
+
+        // Visual state class
+        let stateClass = '';
+        if (!isEnabled) stateClass = ' disabled';
+        else if (isReady) stateClass = ' enabled';
+
+        // Status logic
+        let status, statusClass;
+        if (!isEnabled) {
+          status = 'Disabled'; statusClass = 'off';
+        } else if (p.needsApiKey && !p.hasApiKey) {
+          status = 'API key required'; statusClass = 'missing';
+        } else if (p.available) {
+          status = 'Ready'; statusClass = 'ready';
+        } else {
+          status = 'Enabled — restarting...'; statusClass = 'missing';
+        }
+
+        // API key field for providers that need one
+        let apiKeyHtml = '';
+        if (p.needsApiKey) {
+          const placeholder = p.hasApiKey ? '••••••••••••••' : `Enter ${p.name} API key`;
+          apiKeyHtml = `
+            <div class="provider-apikey-row">
+              <input type="password" id="apikey-${esc(p.name)}" placeholder="${placeholder}"
+                     onclick="event.stopPropagation()">
+              <button class="provider-apikey-btn" onclick="event.stopPropagation(); saveProviderApiKey('${esc(p.name)}')">
+                ${p.hasApiKey ? 'Update' : 'Save'}
+              </button>
+            </div>`;
+        }
+
+        // Toggle for enable/disable (except ollama which is always on)
+        const toggleHtml = p.name !== 'ollama' ? `
+          <label class="toggle-switch" style="transform:scale(0.75)" onclick="event.stopPropagation()">
+            <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleProvider('${esc(p.name)}', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>` : '';
+
+        return `<div class="settings-provider-card${active}${stateClass}" onclick="selectDefaultProvider('${esc(p.name)}')">
+          <div class="settings-provider-header">
+            <div>
+              <div class="settings-provider-name">${esc(p.name)}</div>
+              <div class="settings-provider-status ${statusClass}">${esc(status)}</div>
+            </div>
+            ${toggleHtml}
+          </div>
+          ${apiKeyHtml}
+        </div>`;
+      }).join('');
+
+      // Show Ollama mode selector only when Ollama is the default provider
+      const ollamaModeGroup = document.getElementById('ollama-mode-group');
+      const ollamaModeSelect = document.getElementById('settings-ollama-mode');
+      if (currentSettings.defaultProvider === 'ollama') {
+        ollamaModeGroup.style.display = '';
+        const currentMode = currentSettings.providers?.ollama?.mode || 'both';
+        ollamaModeSelect.value = currentMode;
+      } else {
+        ollamaModeGroup.style.display = 'none';
+      }
+
+      // Show provider models panel for API providers (openrouter, openai, grok, anthropic)
+      const providerModelsGroup = document.getElementById('provider-models-group');
+      const activeProvider = providersData.find(p => p.name === currentSettings.defaultProvider);
+      const apiProviders = ['openrouter', 'openai', 'grok', 'anthropic'];
+
+      if (activeProvider && apiProviders.includes(activeProvider.name) && activeProvider.available) {
+        providerModelsGroup.style.display = '';
+        document.getElementById('provider-models-label').textContent = `${activeProvider.name} Models`;
+        loadProviderModels(activeProvider.name);
+      } else {
+        providerModelsGroup.style.display = 'none';
+      }
+
+      // Update tier dropdowns with current models
+      const models = activeProvider?.models || [];
+      populateTierDropdowns(models);
+
+      // Also update the provider-select dropdown in input bar
+      updateProviderDropdown();
+    }
+
+    function populateTierDropdowns(models) {
+      for (const tier of ['tier1', 'tier2', 'tier3']) {
+        const sel = document.getElementById('settings-' + tier);
+        const current = currentSettings.defaultModels?.[tier] || '';
+        // Keep current value even if not in list
+        const allModels = models.includes(current) ? models : [current, ...models];
+        sel.innerHTML = allModels.map(m =>
+          `<option value="${esc(m)}" ${m === current ? 'selected' : ''}>${esc(m)}</option>`
+        ).join('');
+        sel.onchange = () => updateTierModel(tier, sel.value);
+      }
+    }
+
+    let _providerModelsCache = {};
+    let _providerModelsAll = [];
+
+    async function loadProviderModels(providerName) {
+      const hint = document.getElementById('provider-models-hint');
+      const list = document.getElementById('provider-models-list');
+      const filter = document.getElementById('provider-models-filter');
+      filter.value = '';
+
+      // Use cache if available
+      if (_providerModelsCache[providerName]) {
+        _providerModelsAll = _providerModelsCache[providerName];
+        hint.textContent = `${_providerModelsAll.length} models available`;
+        renderProviderModelsList(_providerModelsAll);
+        return;
+      }
+
+      hint.textContent = 'Loading models from API...';
+      list.innerHTML = '<div style="padding:8px;color:var(--secondary)">Loading...</div>';
+
+      try {
+        const res = await fetch(`/providers/${providerName}/models`);
+        const models = await res.json();
+        _providerModelsAll = models;
+        _providerModelsCache[providerName] = models;
+        hint.textContent = `${models.length} models available — click to use in tiers`;
+        renderProviderModelsList(models);
+
+        // Also update tier dropdowns with the full list
+        if (models.length > 0) {
+          const activeProvider = providersData.find(p => p.name === providerName);
+          if (activeProvider) activeProvider.models = models;
+          populateTierDropdowns(models);
+        }
+      } catch {
+        hint.textContent = 'Failed to load models';
+        list.innerHTML = '';
+      }
+    }
+
+    function filterProviderModels() {
+      const q = document.getElementById('provider-models-filter').value.toLowerCase();
+      const filtered = q ? _providerModelsAll.filter(m => m.toLowerCase().includes(q)) : _providerModelsAll;
+      renderProviderModelsList(filtered);
+    }
+
+    function renderProviderModelsList(models) {
+      const list = document.getElementById('provider-models-list');
+      const tiers = currentSettings.defaultModels || {};
+      const usedModels = new Set([tiers.tier1, tiers.tier2, tiers.tier3]);
+
+      list.innerHTML = models.slice(0, 100).map(m => {
+        const used = usedModels.has(m);
+        return `<div style="padding:4px 8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);${used ? 'background:var(--selected-bg);font-weight:500' : ''}"
+          onmouseenter="this.style.background='var(--hover-bg)'"
+          onmouseleave="this.style.background='${used ? 'var(--selected-bg)' : ''}'"
+          onclick="showModelTierPicker('${esc(m)}')">
+          <span>${esc(m)}</span>
+          ${used ? '<span style="font-size:9px;color:var(--accent)">in use</span>' : ''}
+        </div>`;
+      }).join('') + (models.length > 100 ? `<div style="padding:6px 8px;color:var(--secondary);font-size:10px">...and ${models.length - 100} more (use filter)</div>` : '');
+    }
+
+    function showModelTierPicker(model) {
+      const tiers = ['tier1', 'tier2', 'tier3'];
+      const labels = { tier1: 'Tier 1 (simple)', tier2: 'Tier 2 (medium)', tier3: 'Tier 3 (complex)' };
+      const choice = tiers.map(t => labels[t]).join('\n');
+
+      // Quick assign: cycle through tiers with successive clicks
+      // Or use a simple popup
+      const tierIdx = prompt(`Assign "${model}" to which tier?\n\n1 — Simple tasks\n2 — Medium tasks\n3 — Complex tasks\n\nEnter 1, 2, or 3:`);
+      if (!tierIdx || !['1','2','3'].includes(tierIdx)) return;
+      const tier = tiers[parseInt(tierIdx) - 1];
+      const sel = document.getElementById('settings-' + tier);
+      // Add option if not in dropdown
+      if (![...sel.options].some(o => o.value === model)) {
+        sel.add(new Option(model, model));
+      }
+      sel.value = model;
+      updateTierModel(tier, model);
+      renderProviderModelsList(_providerModelsAll.filter(m => m.toLowerCase().includes(document.getElementById('provider-models-filter').value.toLowerCase()) || !document.getElementById('provider-models-filter').value));
+      showToast(`${model} → ${labels[tier]}`, 'success');
+    }
+
+    async function selectDefaultProvider(name) {
+      try {
+        const provider = providersData.find(p => p.name === name);
+        if (!provider?.available && provider?.needsApiKey && !provider?.hasApiKey) return;
+        const tiers = provider?.defaultTiers || {};
+        await fetch('/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ defaultProvider: name, defaultModels: tiers }),
+        });
+        currentSettings.defaultProvider = name;
+        currentSettings.defaultModels = tiers;
+        _providerModelsCache = {}; // clear cache on provider change
+        renderSettings();
+      } catch {}
+    }
+
+    async function updateTierModel(tier, model) {
+      const models = { ...currentSettings.defaultModels, [tier]: model };
+      try {
+        await fetch('/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ defaultModels: models }),
+        });
+        currentSettings.defaultModels = models;
+      } catch {}
+    }
+
+    async function updateOllamaMode(mode) {
+      try {
+        await fetch('/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ollamaMode: mode }),
+        });
+        if (currentSettings.providers) currentSettings.providers.ollama.mode = mode;
+        showToast(`Ollama mode: ${mode}`, 'success');
+        // Reload to get refreshed model list
+        await loadSettings();
+      } catch {}
+    }
+
+    async function toggleProvider(name, enabled) {
+      try {
+        await fetch('/settings/provider', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: name, enabled }),
+        });
+        showToast(`${name} ${enabled ? 'enabled' : 'disabled'}`, 'success');
+        await loadSettings();
+      } catch { showToast('Failed to update provider', 'error'); }
+    }
+
+    async function saveProviderApiKey(name) {
+      const input = document.getElementById(`apikey-${name}`);
+      const key = input?.value?.trim();
+      if (!key) { showToast('Enter an API key', 'error'); return; }
+      try {
+        await fetch('/settings/provider', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: name, apiKey: key, enabled: true }),
+        });
+        input.value = '';
+        showToast(`${name} API key saved`, 'success');
+        await loadSettings();
+      } catch { showToast('Failed to save API key', 'error'); }
+    }
+
+    // ─── Bot Settings ─────────────────────────
+
+    function toggleBotConfig(platform) {
+      const enabled = document.getElementById(`bot-${platform}-enabled`).checked;
+      const config = document.getElementById(`bot-${platform}-config`);
+      if (enabled) config.classList.add('open');
+      else config.classList.remove('open');
+    }
+
+    async function loadBotSettings() {
+      try {
+        const res = await fetch('/settings/bots');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Telegram
+        if (data.telegram) {
+          document.getElementById('bot-telegram-enabled').checked = data.telegram.enabled || false;
+          document.getElementById('bot-telegram-token').value = data.telegram.token || '';
+          toggleBotConfig('telegram');
+        }
+
+        // WhatsApp
+        if (data.whatsapp) {
+          document.getElementById('bot-whatsapp-enabled').checked = data.whatsapp.enabled || false;
+          document.getElementById('bot-whatsapp-token').value = data.whatsapp.token || '';
+          document.getElementById('bot-whatsapp-phone').value = data.whatsapp.phone_id || '';
+          document.getElementById('bot-whatsapp-verify').value = data.whatsapp.verify_token || '';
+          toggleBotConfig('whatsapp');
+        }
+      } catch {}
+    }
+
+    async function saveBotSettings() {
+      const btn = document.getElementById('bot-save-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sauvegarde...';
+
+      const config = {
+        telegram: {
+          enabled: document.getElementById('bot-telegram-enabled').checked,
+          token: document.getElementById('bot-telegram-token').value.trim(),
+        },
+        whatsapp: {
+          enabled: document.getElementById('bot-whatsapp-enabled').checked,
+          token: document.getElementById('bot-whatsapp-token').value.trim(),
+          phone_id: document.getElementById('bot-whatsapp-phone').value.trim(),
+          verify_token: document.getElementById('bot-whatsapp-verify').value.trim(),
+        },
+      };
+
+      try {
+        const res = await fetch('/settings/bots', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config),
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          showToast(`Bots mis à jour — ${data.active.join(', ') || 'aucun actif'}`, 'success');
+        } else {
+          showToast(data.error || 'Erreur', 'error');
+        }
+      } catch (e) {
+        showToast('Erreur de sauvegarde', 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Sauvegarder les bots';
+    }
+
+    function updateProviderDropdown() {
+      const sel = document.getElementById('provider-select');
+      const defaultP = currentSettings.defaultProvider || 'ollama';
+      sel.innerHTML = providersData
+        .filter(p => p.available || p.name === defaultP)
+        .map(p => `<option value="${esc(p.name)}" ${p.name === defaultP ? 'selected' : ''}>${esc(p.name)}</option>`)
+        .join('');
+    }
+
+    // ─── QCM Intake ─────────────────────────
+    let qcmProjectId = null;
+
+    function showQCM(projectId, questions) {
+      qcmProjectId = projectId;
+      const container = document.getElementById('qcm-questions');
+      container.innerHTML = questions.map((q, i) =>
+        `<div class="qcm-question">
+          <div class="qcm-question-label"><span class="qcm-number">${i + 1}.</span><span>${esc(q)}</span></div>
+          <input class="qcm-field" data-qcm-index="${i}" placeholder="Votre réponse..." />
+        </div>`
+      ).join('');
+      document.getElementById('qcm-overlay').classList.add('visible');
+      const firstField = container.querySelector('.qcm-field');
+      if (firstField) setTimeout(() => firstField.focus(), 100);
+      // Enter in a field → focus next, or submit if last
+      container.querySelectorAll('.qcm-field').forEach((field, i, all) => {
+        field.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (i < all.length - 1) all[i + 1].focus();
+            else submitQCM(false);
+          }
+        });
+      });
+    }
+
+    async function submitQCM(skip) {
+      let answer;
+      if (skip) {
+        answer = 'Continue avec les informations disponibles.';
+      } else {
+        const fields = document.querySelectorAll('#qcm-questions .qcm-field');
+        const questions = document.querySelectorAll('#qcm-questions .qcm-question-label span:last-child');
+        const parts = [];
+        fields.forEach((f, i) => {
+          const q = questions[i]?.textContent || `Question ${i + 1}`;
+          const a = f.value.trim();
+          if (a) parts.push(`${q} → ${a}`);
+        });
+        answer = parts.join('\n');
+        if (!answer) return;
+      }
+
+      document.getElementById('qcm-overlay').classList.remove('visible');
+
+      if (qcmProjectId) {
+        try {
+          await fetch(`/projects/${qcmProjectId}/answer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answer: answer || 'Continue avec les informations disponibles.' }),
+          });
+        } catch (e) {
+          console.error('Failed to send answer:', e);
+        }
+        qcmProjectId = null;
+      }
+    }
+
+    // ─── Artifacts ─────────────────────────
+    function updateArtifacts() {
+      const proj = activeProject();
+      const bar = document.getElementById('artifacts-bar');
+      const dirEl = document.getElementById('artifact-dir');
+      const chipsEl = document.getElementById('artifact-chips');
+
+      if (!proj || !proj.workDir) {
+        bar.classList.remove('visible');
+        return;
+      }
+
+      bar.classList.add('visible');
+      dirEl.textContent = proj.workDir;
+
+      if (proj.artifacts && proj.artifacts.length > 0) {
+        const fileNames = proj.artifacts.map(p => {
+          const parts = p.split('/');
+          return parts[parts.length - 1];
+        });
+        chipsEl.innerHTML = fileNames.slice(0, 6).map(f =>
+          `<span class="artifact-chip">${esc(f)}</span>`
+        ).join('') + (fileNames.length > 6 ? `<span class="artifact-chip">+${fileNames.length - 6} more</span>` : '');
+      } else if (proj.status === 'running') {
+        chipsEl.innerHTML = '<span style="font-size:11px;color:var(--secondary)">Writing files on completion...</span>';
+      } else {
+        chipsEl.innerHTML = '';
+      }
+    }
+
+    async function openWorkDir() {
+      const proj = activeProject();
+      if (!proj || !proj.workDir) return;
+      try {
+        await fetch('/api/open-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: proj.workDir }),
+        });
+      } catch (e) { console.error('Failed to open folder:', e); }
+    }
+
+    // ─── Actions ────────────────────────────
+    async function startRun() {
+      const input = document.getElementById('task-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const provider = document.getElementById('provider-select').value;
+      const workDirRaw = document.getElementById('workdir-input').value.trim();
+      // Expand ~ to home dir hint (server resolves it)
+      const workDir = workDirRaw || undefined;
+
+      try {
+        const res = await fetch('/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: text, provider, workDir }),
+        });
+        const result = await res.json();
+        if (result.projectId) {
+          const proj = createProject(result.projectId, text.slice(0, 50) + (text.length > 50 ? '...' : ''), text);
+          proj.provider = result.provider || provider;
+          proj.workDir = result.workDir || workDir || null;
+          proj.artifacts = [];
+          input.value = '';
+          updateStopButton();
+          updateArtifacts();
+        }
+      } catch (e) {
+        console.error('Failed to start:', e);
+      }
+    }
+
+    async function stopRun() {
+      const proj = activeProject();
+      if (!proj) return;
+      try {
+        await fetch(`/projects/${proj.id}/stop`, { method: 'POST' });
+        proj.status = 'aborted';
+        updateStopButton();
+        renderProjectList();
+      } catch {}
+    }
+
+    function focusInput() {
+      document.getElementById('task-input').focus();
+    }
+
+    document.getElementById('task-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') startRun();
+    });
+
+    // QCM keyboard: Ctrl+Enter submits from any field
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey && document.getElementById('qcm-overlay').classList.contains('visible')) {
+        submitQCM(false);
+      }
+    });
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s || '';
+      return d.innerHTML;
+    }
+
+    // ─── Dark Mode ─────────────────────────
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('arcti-theme', next);
+    }
+
+    // Restore theme on load
+    (function() {
+      const saved = localStorage.getItem('arcti-theme');
+      if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+
+    // ─── Toast Notifications ────────────
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 4000);
+
+      // OS notification if page not visible
+      if (document.hidden && Notification.permission === 'granted') {
+        new Notification('Arcti', { body: message, icon: '/favicon.ico' });
+      }
+    }
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // ─── Keyboard Shortcuts ─────────────
+    document.addEventListener('keydown', (e) => {
+      const isMeta = e.metaKey || e.ctrlKey;
+
+      // Cmd+Enter → Run
+      if (isMeta && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        startRun();
+        return;
+      }
+
+      // Cmd+. → Stop
+      if (isMeta && e.key === '.') {
+        e.preventDefault();
+        stopRun();
+        return;
+      }
+
+      // Escape → Close modals
+      if (e.key === 'Escape') {
+        document.getElementById('qcm-overlay').classList.remove('visible');
+        document.getElementById('settings-overlay').classList.remove('open');
+        document.getElementById('skills-overlay').classList.remove('open');
+        return;
+      }
+
+      // Arrow Up/Down → Navigate tasks (when not in input)
+      if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        navigateTasks(e.key === 'ArrowDown' ? 1 : -1);
+        return;
+      }
+
+      // Cmd+D → Toggle dark mode
+      if (isMeta && e.key === 'd') {
+        e.preventDefault();
+        toggleTheme();
+        return;
+      }
+    });
+
+    function navigateTasks(dir) {
+      const proj = activeProject();
+      if (!proj) return;
+      const taskIds = [...proj.tasks.keys()];
+      if (taskIds.length === 0) return;
+
+      const currentIdx = proj.selectedTaskId ? taskIds.indexOf(proj.selectedTaskId) : -1;
+      const nextIdx = Math.max(0, Math.min(taskIds.length - 1, currentIdx + dir));
+      const nextId = taskIds[nextIdx];
+      if (nextId) {
+        proj.selectedTaskId = nextId;
+        showDetail(nextId);
+        // Highlight in task tree
+        document.querySelectorAll('.task-row').forEach(r => r.classList.remove('selected'));
+        const row = document.querySelector(`.task-row[data-id="${nextId}"]`);
+        if (row) { row.classList.add('selected'); row.scrollIntoView({ block: 'nearest' }); }
+      }
+    }
+
+    // ─── Streaming ──────────────────────
+    const streamBuffers = new Map(); // taskId → accumulated text
+
+    function handleStreamChunk(data) {
+      const taskId = data.taskId;
+      if (!streamBuffers.has(taskId)) streamBuffers.set(taskId, '');
+      streamBuffers.set(taskId, streamBuffers.get(taskId) + (data.chunk || ''));
+
+      // Update detail panel if this task is selected
+      const proj = activeProject();
+      if (proj && proj.selectedTaskId === taskId) {
+        const body = document.getElementById('detail-body');
+        body.innerHTML = `<div class="detail-section"><div class="detail-section-label">STREAMING OUTPUT</div><div class="stream-output">${esc(streamBuffers.get(taskId))}<span class="stream-cursor"></span></div></div>`;
+      }
+    }
+
+    // ─── Diff View ──────────────────────
+    function renderDiff(prev, curr) {
+      const prevLines = (prev || '').split('\n');
+      const currLines = (curr || '').split('\n');
+      let html = '';
+
+      const maxLen = Math.max(prevLines.length, currLines.length);
+      for (let i = 0; i < maxLen; i++) {
+        const pLine = prevLines[i] ?? '';
+        const cLine = currLines[i] ?? '';
+        if (pLine === cLine) {
+          html += `<div>${esc(cLine)}</div>`;
+        } else {
+          if (pLine) html += `<div class="diff-line-del">${esc(pLine)}</div>`;
+          if (cLine) html += `<div class="diff-line-add">${esc(cLine)}</div>`;
+        }
+      }
+      return html;
+    }
+
+    // ─── Cost Estimation ────────────────
+    async function loadCostEstimate() {
+      const proj = activeProject();
+      if (!proj) return;
+
+      try {
+        const res = await fetch(`/projects/${proj.id}/estimate`);
+        if (!res.ok) { hideCostBar(); return; }
+        const est = await res.json();
+
+        document.getElementById('cost-tokens').textContent = (est.estimatedTokens || 0).toLocaleString();
+        document.getElementById('cost-usd').textContent = est.estimatedCostUsd !== undefined ? `$${est.estimatedCostUsd.toFixed(4)}` : '—';
+        document.getElementById('cost-time').textContent = est.estimatedDurationMinutes !== undefined ? `~${Math.ceil(est.estimatedDurationMinutes)}` : '—';
+        document.getElementById('cost-bar').classList.add('visible');
+      } catch { hideCostBar(); }
+    }
+
+    function hideCostBar() {
+      document.getElementById('cost-bar').classList.remove('visible');
+    }
+
+    // ─── Export / Import ────────────────
+    async function exportProject() {
+      const proj = activeProject();
+      if (!proj) return;
+      try {
+        const res = await fetch(`/projects/${proj.id}/export`);
+        if (!res.ok) { showToast('Export failed', 'error'); return; }
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `arcti-${proj.id}-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Project exported', 'success');
+      } catch { showToast('Export failed', 'error'); }
+    }
+
+    async function importProject(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        const res = await fetch('/projects/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) { showToast('Import failed', 'error'); return; }
+        const result = await res.json();
+        if (result.projectId) {
+          showToast('Project imported', 'success');
+          // Reload projects
+          location.reload();
+        }
+      } catch { showToast('Invalid file', 'error'); }
+      event.target.value = '';
+    }
+
+    // ─── Live Preview ───────────────────
+    function togglePreview() {
+      document.getElementById('preview-panel').classList.toggle('visible');
+    }
+
+    function updatePreview() {
+      const proj = activeProject();
+      if (!proj || !proj.workDir) return;
+
+      // Check if there's an index.html in artifacts
+      const htmlFile = (proj.artifacts || []).find(f => f.endsWith('.html') || f.endsWith('.htm'));
+      if (htmlFile) {
+        document.getElementById('preview-panel').classList.add('visible');
+        // Build preview from task outputs containing HTML
+        const htmlContent = findHTMLInOutputs(proj);
+        if (htmlContent) {
+          const iframe = document.getElementById('preview-iframe');
+          iframe.srcdoc = htmlContent;
+        }
+      }
+    }
+
+    function findHTMLInOutputs(proj) {
+      for (const [, t] of proj.tasks) {
+        if (t.output && t.output.includes('<html')) {
+          const match = t.output.match(/```html?\n([\s\S]*?)```/);
+          if (match) return match[1];
+        }
+        if (t.output && t.output.includes('<!DOCTYPE')) {
+          const match = t.output.match(/```html?\n([\s\S]*?)```/);
+          if (match) return match[1];
+        }
+      }
+      return null;
+    }
+
+    // ─── Task Feedback ──────────────────
+    async function sendTaskFeedback(taskId, action) {
+      const proj = activeProject();
+      if (!proj) return;
+
+      let feedback = '';
+      if (action === 'redo') {
+        feedback = prompt('What should be done differently?');
+        if (!feedback) return;
+      }
+
+      try {
+        const res = await fetch(`/projects/${proj.id}/tasks/${taskId}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, feedback: feedback || '' }),
+        });
+        if (res.ok) {
+          showToast(action === 'redo' ? 'Task queued for redo' : `Task ${action}d`, 'success');
+        } else {
+          const err = await res.json();
+          showToast(err.error || 'Failed', 'error');
+        }
+      } catch { showToast('Network error', 'error'); }
+    }
+
+    // ─── Init ───────────────────────────────
+    connect();
+    loadSettings(); // Load providers for the dropdown
+
+    // Load existing projects from backend (survives page refresh)
+    (async () => {
+      try {
+        const res = await fetch('/projects');
+        if (!res.ok) return;
+        const list = await res.json();
+        for (const p of list) {
+          if (projects.has(p.id)) continue;
+          const proj = createProject(p.id, p.name, p.input || '');
+          proj.provider = p.provider;
+          proj.workDir = p.workDir || null;
+          proj.artifacts = p.artifacts || [];
+          proj.status = p.status;
+
+          // Fetch tasks for this project
+          try {
+            const tasksRes = await fetch(`/projects/${p.id}/tasks`);
+            if (tasksRes.ok) {
+              const tasks = await tasksRes.json();
+              for (const t of tasks) {
+                proj.tasks.set(t.id, {
+                  ...t, status: t.result?.status || 'pending',
+                  modelUsed: t.result?.modelUsed || '',
+                  output: t.result?.output || '',
+                  tokenUsage: t.result?.tokenUsage || null,
+                  durationMs: t.result?.durationMs || 0,
+                  verification: t.result?.verification || null,
+                  attempts: t.result?.attempts || 0,
+                });
+                const tok = t.result?.tokenUsage;
+                if (tok) proj.totalTokens += (tok.promptTokens || 0) + (tok.completionTokens || 0);
+              }
+            }
+          } catch {}
+        }
+        if (list.length > 0) {
+          renderProjectList();
+          if (activeProjectId) {
+            renderTasks();
+            updateStats();
+            updateArtifacts();
+          }
+        }
+      } catch {}
+    })();
+
+    // Poll projects for task discovery
+    setInterval(async () => {
+      for (const [pid, proj] of projects) {
+        try {
+          const res = await fetch(`/projects/${pid}/tasks`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          for (const t of data) {
+            if (!proj.tasks.has(t.id)) {
+              proj.tasks.set(t.id, {
+                ...t, status: t.result?.status || 'pending',
+                modelUsed: t.result?.modelUsed || '',
+                output: t.result?.output || '',
+                tokenUsage: t.result?.tokenUsage || null,
+                durationMs: t.result?.durationMs || 0,
+                verification: t.result?.verification || null,
+                attempts: t.result?.attempts || 0,
+              });
+            } else {
+              const existing = proj.tasks.get(t.id);
+              if (t.result?.output && !existing.output) {
+                Object.assign(existing, {
+                  output: t.result.output, tokenUsage: t.result.tokenUsage,
+                  durationMs: t.result.durationMs, verification: t.result.verification,
+                  attempts: t.result.attempts,
+                });
+              }
+            }
+          }
+        } catch {}
+      }
+
+      if (activeProjectId) {
+        renderTasks();
+        updateStats();
+      }
+
+      // Check project statuses
+      try {
+        const res = await fetch('/projects');
+        if (res.ok) {
+          const list = await res.json();
+          let changed = false;
+          for (const p of list) {
+            const proj = projects.get(p.id);
+            if (proj) {
+              if (proj.status !== p.status) {
+                proj.status = p.status;
+                changed = true;
+              }
+              if (p.workDir) proj.workDir = p.workDir;
+              if (p.artifacts && p.artifacts.length > 0) {
+                proj.artifacts = p.artifacts;
+                changed = true;
+              }
+            }
+          }
+          if (changed && activeProjectId) updateArtifacts();
+          renderProjectList();
+          updateStopButton();
+        }
+      } catch {}
+    }, 2000);
+
+    // ─── Skills ─────────────────────────────────────────────────────────
+
+    function toggleSkillsPanel() {
+      const overlay = document.getElementById('skills-overlay');
+      overlay.classList.toggle('open');
+      if (overlay.classList.contains('open')) loadSkills();
+    }
+
+    async function loadSkills() {
+      try {
+        const showAll = document.getElementById('sk-show-deprecated')?.checked;
+        const [skillsRes, statsRes] = await Promise.all([
+          fetch(`/skills${showAll ? '?all=true' : ''}`),
+          fetch('/skills/stats'),
+        ]);
+        const skills = await skillsRes.json();
+        const stats = await statsRes.json();
+
+        document.getElementById('sk-total').textContent = stats.total;
+        document.getElementById('sk-active').textContent = stats.active;
+        document.getElementById('sk-deprecated').textContent = stats.deprecated;
+        document.getElementById('sk-avg').textContent = stats.avgScore;
+
+        document.getElementById('skills-count').textContent = stats.active;
+        document.getElementById('skills-avg').textContent = stats.avgScore;
+
+        const list = document.getElementById('skills-list');
+        if (skills.length === 0) {
+          list.innerHTML = '<div style="color:var(--secondary);font-size:12px;padding:24px 0;text-align:center;">No skills yet. Skills are created automatically when tools are generated during task execution.</div>';
+          return;
+        }
+
+        list.innerHTML = skills.map(s => {
+          const scoreColor = s.score >= 70 ? 'var(--success)' : s.score >= 40 ? 'var(--warning)' : 'var(--error)';
+          const deprecated = s.deprecated ? ' style="opacity:0.5"' : '';
+          return `<div class="skill-card"${deprecated}>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:13px;font-weight:500;">${esc(s.name)}${s.deprecated ? ' <span style="color:var(--error);font-size:10px;">DEPRECATED</span>' : ''}</div>
+              <div style="font-size:18px;font-weight:600;color:${scoreColor};">${s.score}</div>
+            </div>
+            <div style="font-size:11px;color:var(--secondary);margin-top:4px;">${esc(s.description)}</div>
+            <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--tertiary);">
+              <span>${s.uses} uses</span>
+              <span>${s.successes} ok</span>
+              <span>${s.failures} fail</span>
+              <span>${s.avgDurationMs}ms avg</span>
+            </div>
+          </div>`;
+        }).join('');
+      } catch {}
+    }
+
+    // Load skills count on startup
+    fetch('/skills/stats').then(r => r.json()).then(stats => {
+      document.getElementById('skills-count').textContent = stats.active || 0;
+      document.getElementById('skills-avg').textContent = stats.avgScore || 0;
+    }).catch(() => {});
+  </script>
+  <style>
+    .skill-card {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: var(--bg);
+    }
+    .skill-card:hover { border-color: var(--tertiary); }
+  </style>
+</body>
+</html>
